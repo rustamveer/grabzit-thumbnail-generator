@@ -1,0 +1,5 @@
+{
+    "require": {
+        "grabzit/grabzit": "^3.5"
+    }
+}

@@ -1,0 +1,74 @@
+{
+    "packages": [
+        {
+            "name": "grabzit/grabzit",
+            "version": "3.5.4",
+            "version_normalized": "3.5.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/GrabzIt/grabzit-php.git",
+                "reference": "807827bf41351c6a1e6fa43c22a63454e956b1dc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/GrabzIt/grabzit-php/zipball/807827bf41351c6a1e6fa43c22a63454e956b1dc",
+                "reference": "807827bf41351c6a1e6fa43c22a63454e956b1dc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.2"
+            },
+            "time": "2024-04-22T21:50:44+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "GrabzIt\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Use our API to allow your app to create images, DOCX documents, videos, rendered HTML and PDF's from URL's or raw HTML. Additionally GrabzIt allows you to convert online videos into animated GIF's or HTML tables into CSV's.",
+            "homepage": "https://grabz.it/",
+            "keywords": [
+                "BMP",
+                "HTML to DOCX",
+                "HTML to Video",
+                "Rendered HTML",
+                "URL to DOCX",
+                "URL to Image",
+                "URL to PDF",
+                "URL to Video",
+                "animated gif",
+                "api",
+                "capture",
+                "csv",
+                "docx",
+                "html",
+                "html to image",
+                "html to pdf",
+                "images",
+                "jpg",
+                "mp4",
+                "pdf",
+                "png",
+                "screenshots",
+                "table",
+                "tiff",
+                "video conversion",
+                "videos",
+                "web",
+                "xlsx"
+            ],
+            "support": {
+                "issues": "https://grabz.it/support/",
+                "source": "https://github.com/GrabzIt/grabzit-php/tree/3.5.4"
+            },
+            "install-path": "../grabzit/grabzit"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}
