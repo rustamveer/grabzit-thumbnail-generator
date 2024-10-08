@@ -5,7 +5,6 @@ use GrabzIt\GrabzItException;
 
 class Grabzit_Thumbnail_Generator
 {
-
     private $api_key;
     private $api_secret;
 
@@ -14,7 +13,7 @@ class Grabzit_Thumbnail_Generator
         $this->api_key = defined('GRABZIT_API_KEY') ? GRABZIT_API_KEY : '';
         $this->api_secret = defined('GRABZIT_API_SECRET') ? GRABZIT_API_SECRET : '';
     }
-
+    
     public function init()
     {
         add_action('frm_after_create_entry', array($this, 'generate_thumbnail_and_save'), 10, 2);
@@ -23,8 +22,8 @@ class Grabzit_Thumbnail_Generator
 
     public function generate_thumbnail_and_save($entry_id, $form_id)
     {
-        $video_field_id = 196;  //later we will make this dynamic video field ID
-        $thumbnail_field_id = 627;  // later we will make this dynamic thumbnail field ID
+        $video_field_id = 196;  // video field ID
+        $thumbnail_field_id = 637;  // thumbnail field ID
 
         $entry = FrmEntry::getOne($entry_id, true);
         $file_id = isset($entry->metas[$video_field_id]) ? $entry->metas[$video_field_id] : '';
@@ -90,6 +89,104 @@ class Grabzit_Thumbnail_Generator
         }
     }
 
+    private function generate_image_thumbnail($image_url)
+    {
+        $upload_dir = wp_upload_dir();
+        $thumbnail_path = $upload_dir['path'] . '/' . uniqid() . '.jpg';
+
+        $grabzIt = new GrabzItClient($this->api_key, $this->api_secret);
+
+        $options = new \GrabzIt\GrabzItImageOptions();
+        $options->setWidth(600); 
+        $options->setHeight(600);  
+        $options->setFormat("jpg");  
+        $options->setQuality(100);
+        $options->setCrop(0, 0, 600, 600);  
+
+        try {
+ 
+            $grabzIt->URLToImage($image_url, $options);
+
+            $grabzIt->SaveTo($thumbnail_path);
+
+            $this->log("Thumbnail saved to: $thumbnail_path");
+            return $thumbnail_path;
+        } catch (GrabzItException $e) {
+ 
+            $error_message = "GrabzIt Error: " . $e->getMessage();
+            $this->log($error_message);
+            error_log($error_message);
+
+            $this->send_error_email($error_message);
+
+            return false;
+        }
+    }
+
+    private function generate_docx_thumbnail($docx_url)
+    {
+        $upload_dir = wp_upload_dir();
+        $thumbnail_path = $upload_dir['path'] . '/' . uniqid() . '.jpg';
+
+        $google_docs_viewer_url = 'https://docs.google.com/viewer?url=' . urlencode($docx_url) . '&embedded=true';
+
+        $grabzIt = new GrabzItClient($this->api_key, $this->api_secret);
+
+        $options = new \GrabzIt\GrabzItImageOptions();
+        $options->setWidth(600);
+        $options->setHeight(600);
+        $options->setFormat("jpg");
+        $options->setQuality(100);
+
+        try {
+            $grabzIt->URLToImage($google_docs_viewer_url, $options);
+            $grabzIt->SaveTo($thumbnail_path);
+
+            $this->log("Thumbnail saved to: $thumbnail_path");
+            return $thumbnail_path;
+        } catch (GrabzItException $e) {
+            $error_message = "GrabzIt Error: " . $e->getMessage();
+            $this->log($error_message);
+            error_log($error_message);
+
+            $this->send_error_email($error_message);
+
+            return false;
+        }
+    }
+
+    private function generate_pdf_thumbnail($pdf_url)
+    {
+
+        $upload_dir = wp_upload_dir();
+        $thumbnail_path = $upload_dir['path'] . '/' . uniqid() . '.jpg';
+
+        $grabzIt = new GrabzItClient($this->api_key, $this->api_secret);
+
+        $options = new \GrabzIt\GrabzItImageOptions();
+        $options->setWidth(600);
+        $options->setHeight(600);
+        $options->setFormat("jpg");
+        $options->setQuality(100);  
+        try {
+            $grabzIt->URLToImage($pdf_url, $options);
+
+            $grabzIt->SaveTo($thumbnail_path);
+
+            $this->log("PDF Thumbnail saved to: $thumbnail_path");
+            return $thumbnail_path;
+        } catch (GrabzItException $e) {
+
+            $error_message = "GrabzIt Error: " . $e->getMessage();
+            $this->log($error_message);
+            error_log($error_message);
+
+            $this->send_error_email($error_message);
+
+            return false;
+        }
+    }
+
     private function save_thumbnail_to_media_library($thumbnail_path)
     {
         $upload_dir = wp_upload_dir();
@@ -126,13 +223,13 @@ class Grabzit_Thumbnail_Generator
     public function trigger_update_for_all_entries($form_id, $batch_size = 3)
     {
         global $wpdb;
-
-        $approval_field_id = 197; // later we will make this dynamicField ID for approval status
-        $approved_value = 'approved';
-
+    
+        $approval_field_id = 197; // Field ID for approval status
+        $approved_value = 'approved'; // Value indicating approved status
+    
         $last_processed_id = get_option('last_processed_entry_id', 0);
         $processing_complete = false;
-
+    
         while (!$processing_complete) {
             $entries = $wpdb->get_results($wpdb->prepare(
                 "
@@ -153,32 +250,44 @@ class Grabzit_Thumbnail_Generator
                 $last_processed_id,
                 $batch_size
             ));
-
-            // Check if there are entries to process
+    
             if (empty($entries)) {
                 $processing_complete = true;
                 $this->log("All approved entries have been processed.");
                 break;
             }
-
+    
             foreach ($entries as $entry) {
-                // Process each entry
                 $this->generate_thumbnail_and_save($entry->id, $form_id);
-
-                // update the last processed ID
+    
                 $last_processed_id = $entry->id;
                 update_option('last_processed_entry_id', $last_processed_id);
-
+    
                 $this->log("Processed entry ID: {$entry->id}");
-
-                // added delay between processing to reduce server load since getting badgateway error
+    
                 sleep(1);
             }
         }
-
+    
         delete_option('last_processed_entry_id');
         $this->log("Batch processing completed successfully for form ID {$form_id}.");
     }
+
+    public function create_thumbnail($video_url)
+    {
+        return $this->generate_thumbnail($video_url);
+    }
+
+    public function create_docx_thumbnail($docx_url)
+    {
+        return $this->generate_docx_thumbnail($docx_url);
+    }
+
+    public function create_pdf_thumbnail($pdf_url)
+    {
+        return $this->generate_pdf_thumbnail($pdf_url);
+    }
+
 
     private function log($message)
     {
