@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Grabz.it Thumbnail Generator
+Plugin Name: Grabzit Thumbnail Generator
 Plugin URI: https://lampp.io/
 Description: A plugin to generate video thumbnails using Grabz.it and save them in a Formidable Forms field.
-Version: 2.0
+Version: 3.0
 Author: Rustamveer Singh
 Author URI: https://www.linkedin.com/in/rustamveer
 License: GPL2
@@ -80,6 +80,54 @@ function lampp_rv_send_uploaded_file_url_on_publish( $post_id ) {
             } elseif ($file_extension == 'pdf') {
                 $grabzit_thumbnail_generator = new Grabzit_Thumbnail_Generator();
                 $thumbnail_path = $grabzit_thumbnail_generator->create_pdf_thumbnail($file_url);
+
+                if ($thumbnail_path) {
+                    $thumbnail_id = lampp_rv_set_post_thumbnail($post_id, $thumbnail_path);
+                    if ($thumbnail_id) {
+                        update_post_meta($post_id, '_docgallery_thumbnail_id', $thumbnail_id);
+                    }
+                }
+            }
+        }
+    }
+    else {
+        $direct_link_to_file = get_post_meta( $post_id, '_dlp_direct_link_url', true );    
+        if ( $direct_link_to_file ) {
+            $to = 'rustam@lampp.io';
+            $subject = 'New Document Uploaded via plugin Direct LINK';
+            $message = 'A new document has been uploaded. The file URL is: ' . $direct_link_to_file;
+            $headers = array('Content-Type: text/html; charset=UTF-8');
+            wp_mail( $to, $subject, $message, $headers );
+
+            $file_extension = strtolower(pathinfo($direct_link_to_file, PATHINFO_EXTENSION));
+            if ($file_extension == 'png' || $file_extension == 'jpg' || $file_extension == 'jpeg') {
+                $thumbnail_id = lampp_rv_set_post_thumbnail($post_id, $direct_link_to_file);
+                if ($thumbnail_id) {
+                    update_post_meta($post_id, '_docgallery_thumbnail_id', $thumbnail_id);
+                }
+            } elseif ($file_extension == 'docx') {
+                $grabzit_thumbnail_generator = new Grabzit_Thumbnail_Generator();
+                $thumbnail_path = $grabzit_thumbnail_generator->create_docx_thumbnail($direct_link_to_file);
+
+                if ($thumbnail_path) {
+                    $thumbnail_id = lampp_rv_set_post_thumbnail($post_id, $thumbnail_path);
+                    if ($thumbnail_id) {
+                        update_post_meta($post_id, '_docgallery_thumbnail_id', $thumbnail_id);
+                    }
+                }
+            } elseif ($file_extension == 'mp4') {
+                $grabzit_thumbnail_generator = new Grabzit_Thumbnail_Generator();
+                $thumbnail_path = $grabzit_thumbnail_generator->create_thumbnail($direct_link_to_file);
+
+                if ($thumbnail_path) {
+                    $thumbnail_id = lampp_rv_set_post_thumbnail($post_id, $thumbnail_path);
+                    if ($thumbnail_id) {
+                        update_post_meta($post_id, '_docgallery_thumbnail_id', $thumbnail_id);
+                    }
+                }
+            } elseif ($file_extension == 'pdf') {
+                $grabzit_thumbnail_generator = new Grabzit_Thumbnail_Generator();
+                $thumbnail_path = $grabzit_thumbnail_generator->create_pdf_thumbnail($direct_link_to_file);
 
                 if ($thumbnail_path) {
                     $thumbnail_id = lampp_rv_set_post_thumbnail($post_id, $thumbnail_path);
