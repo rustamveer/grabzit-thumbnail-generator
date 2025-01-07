@@ -3,7 +3,7 @@
 Plugin Name: Grabzit Thumbnail Generator
 Plugin URI: https://lampp.io/
 Description: A plugin to generate video thumbnails using Grabz.it and save them in a Formidable Forms field.
-Version: 3.0
+Version: 2.0
 Author: Rustamveer Singh
 Author URI: https://www.linkedin.com/in/rustamveer
 License: GPL2
@@ -49,7 +49,9 @@ function lampp_rv_send_uploaded_file_url_on_publish( $post_id ) {
             $subject = 'New Document Uploaded via plugin';
             $message = 'A new document has been uploaded. The file URL is: ' . $file_url;
             $headers = array('Content-Type: text/html; charset=UTF-8');
-            wp_mail( $to, $subject, $message, $headers );
+            if (defined('ENV_GRABZIT_RV_LAMPP') && ENV_GRABZIT_RV_LAMPP === 'dev') {
+                wp_mail($to, $subject, $message, $headers);
+            }
 
             $file_extension = strtolower(pathinfo($file_url, PATHINFO_EXTENSION));
             if ($file_extension == 'png' || $file_extension == 'jpg' || $file_extension == 'jpeg') {
@@ -97,7 +99,9 @@ function lampp_rv_send_uploaded_file_url_on_publish( $post_id ) {
             $subject = 'New Document Uploaded via plugin Direct LINK';
             $message = 'A new document has been uploaded. The file URL is: ' . $direct_link_to_file;
             $headers = array('Content-Type: text/html; charset=UTF-8');
-            wp_mail( $to, $subject, $message, $headers );
+            if (defined('ENV_GRABZIT_RV_LAMPP') && ENV_GRABZIT_RV_LAMPP === 'dev') {
+                wp_mail($to, $subject, $message, $headers);
+            }
 
             $file_extension = strtolower(pathinfo($direct_link_to_file, PATHINFO_EXTENSION));
             if ($file_extension == 'png' || $file_extension == 'jpg' || $file_extension == 'jpeg') {
